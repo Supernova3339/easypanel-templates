@@ -1,0 +1,45 @@
+name: Flatnotes
+description: A self-hosted, database-less note-taking web app that utilises a flat folder of markdown files for storage.
+instructions: null
+changeLog:
+  - date: 2023-5-23
+    description: first release
+links:
+  - label: Website
+    url: https://flatnotes.io
+  - label: Github
+    url: https://github.com/dullage/flatnotes
+  - label: Demo
+    url: https://demo.flatnotes.io
+contributors:
+  - name: Supernova3339
+    url: https://github.com/Supernova3339
+schema:
+  type: object
+  required:
+    - projectName
+    - appServiceName
+    - appServiceImage
+    - username
+    - password
+  properties:
+    projectName:
+      type: string
+      title: Project Name
+    appServiceName:
+      type: string
+      title: App Service Name
+      default: flatnotes
+    domain:
+      type: string
+      title: Domain
+    appServiceImage:
+      type: string
+      title: App Service Image
+      default: dullage/flatnotes:v3.0.3
+    username:
+      type: string
+      title: Username
+    password:
+      type: string
+      title: Password
