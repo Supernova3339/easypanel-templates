@@ -8,7 +8,6 @@ export function generate(input: Input): Output {
   services.push({
     type: "postgres",
     data: {
-      projectName: input.projectName,
       serviceName: input.databaseServiceName,
       password: databasePassword,
     },
@@ -17,21 +16,49 @@ export function generate(input: Input): Output {
   services.push({
     type: "app",
     data: {
-      projectName: input.projectName,
       serviceName: input.appServiceName,
       source: {
         type: "image",
         image: input.appServiceImage,
       },
       mounts: [
-        { type: "volume", name: "mattermost", mountPath: "/mattermost" },
+        {
+          type: "volume",
+          name: "data",
+          mountPath: "/mattermost/data",
+        },
+        {
+          type: "volume",
+          name: "logs",
+          mountPath: "/mattermost/logs",
+        },
+        {
+          type: "volume",
+          name: "config",
+          mountPath: "/mattermost/config",
+        },
+        {
+          type: "volume",
+          name: "plugins",
+          mountPath: "/mattermost/plugins",
+        },
+        {
+          type: "volume",
+          name: "client-plugins",
+          mountPath: "/mattermost/client/plugins",
+        },
       ],
-      proxy: { port: 8065, secure: true },
+      domains: [
+        {
+          host: "$(EASYPANEL_DOMAIN)",
+          port: 8065,
+        },
+      ],
       deploy: { replicas: 1, command: null, zeroDowntime: true },
       env: [
         `MM_SQLSETTINGS_DRIVERNAME=postgres`,
-        `MM_SQLSETTINGS_DATASOURCE=postgres://postgres:${databasePassword}@${input.projectName}_${input.databaseServiceName}:5432/${input.projectName}?sslmode=disable`,
-        `DOMAIN=https://${input.domain}`,
+        `MM_SQLSETTINGS_DATASOURCE=postgres://postgres:${databasePassword}@$(PROJECT_NAME)_${input.databaseServiceName}:5432/$(PROJECT_NAME)?sslmode=disable`,
+        `DOMAIN=https://$(PRIMARY_DOMAIN)`,
       ].join("\n"),
     },
   });

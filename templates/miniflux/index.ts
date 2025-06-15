@@ -8,10 +8,9 @@ export function generate(input: Input): Output {
   services.push({
     type: "app",
     data: {
-      projectName: input.projectName,
       serviceName: input.appServiceName,
       env: [
-        `DATABASE_URL=postgres://postgres:${databasePassword}@${input.projectName}_${input.databaseServiceName}/${input.projectName}?sslmode=disable`,
+        `DATABASE_URL=postgres://postgres:${databasePassword}@$(PROJECT_NAME)_${input.databaseServiceName}/$(PROJECT_NAME)?sslmode=disable`,
         `RUN_MIGRATIONS=1`,
         `CREATE_ADMIN=1`,
         `ADMIN_USERNAME=${input.adminUsername}`,
@@ -21,17 +20,18 @@ export function generate(input: Input): Output {
         type: "image",
         image: input.appServiceImage,
       },
-      proxy: {
-        port: 80,
-        secure: true,
-      },
+      domains: [
+        {
+          host: "$(EASYPANEL_DOMAIN)",
+          port: 80,
+        },
+      ],
     },
   });
 
   services.push({
     type: "postgres",
     data: {
-      projectName: input.projectName,
       serviceName: input.databaseServiceName,
       password: databasePassword,
     },

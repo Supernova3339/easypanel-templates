@@ -3,12 +3,11 @@ import { Input } from "./meta";
 
 export function generate(input: Input): Output {
   const services: Services = [];
-  const siteName = input.projectName || input.metabaseSiteName;
+  const siteName = input.metabaseSiteName || "$(PROJECT_NAME)";
 
   services.push({
     type: "app",
     data: {
-      projectName: input.projectName,
       serviceName: input.appServiceName,
       env: [
         `MB_SITE_NAME=${siteName}`,
@@ -19,10 +18,12 @@ export function generate(input: Input): Output {
         type: "image",
         image: input.appServiceImage,
       },
-      proxy: {
-        port: 3000,
-        secure: true,
-      },
+      domains: [
+        {
+          host: "$(EASYPANEL_DOMAIN)",
+          port: 3000,
+        },
+      ],
       mounts: [
         {
           type: "volume",

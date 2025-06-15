@@ -7,7 +7,6 @@ export function generate(input: Input): Output {
   services.push({
     type: "app",
     data: {
-      projectName: input.projectName,
       serviceName: input.appServiceName,
       env: [
         `IMGPROXY_KEY=${randomString(18)}`,
@@ -17,10 +16,12 @@ export function generate(input: Input): Output {
         type: "image",
         image: input.appServiceImage,
       },
-      proxy: {
-        port: 8080,
-        secure: true,
-      },
+      domains: [
+        {
+          host: "$(EASYPANEL_DOMAIN)",
+          port: 8080,
+        },
+      ],
     },
   });
 

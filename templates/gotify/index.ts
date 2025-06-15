@@ -7,7 +7,6 @@ export function generate(input: Input): Output {
   services.push({
     type: "app",
     data: {
-      projectName: input.projectName,
       serviceName: input.appServiceName,
       source: {
         type: "image",
@@ -17,10 +16,12 @@ export function generate(input: Input): Output {
         `GOTIFY_DEFAULTUSER_PASS=${input.password}`,
         `TZ=${input.serviceTimezone}`,
       ].join("\n"),
-      proxy: {
-        port: 80,
-        secure: true,
-      },
+      domains: [
+        {
+          host: "$(EASYPANEL_DOMAIN)",
+          port: 80,
+        },
+      ],
       mounts: [
         {
           type: "volume",

@@ -7,7 +7,6 @@ export function generate(input: Input): Output {
   services.push({
     type: "app",
     data: {
-      projectName: input.projectName,
       serviceName: input.appServiceName,
       source: {
         type: "image",
@@ -20,9 +19,12 @@ export function generate(input: Input): Output {
           mountPath: "/datastore",
         },
       ],
-      proxy: {
-        port: 5000,
-      },
+      domains: [
+        {
+          host: "$(EASYPANEL_DOMAIN)",
+          port: 5000,
+        },
+      ],
     },
   });
   return { services };

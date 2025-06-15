@@ -7,17 +7,18 @@ export function generate(input: Input): Output {
   services.push({
     type: "app",
     data: {
-      projectName: input.projectName,
       serviceName: input.appServiceName,
       env: [`PASSWORD=${input.password}`].join("\n"),
       source: {
         type: "image",
         image: input.appServiceImage,
       },
-      proxy: {
-        port: 80,
-        secure: true,
-      },
+      domains: [
+        {
+          host: "$(EASYPANEL_DOMAIN)",
+          port: 80,
+        },
+      ],
       mounts: [
         {
           type: "volume",

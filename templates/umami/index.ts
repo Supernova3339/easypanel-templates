@@ -14,7 +14,6 @@ export function generate(input: Input): Output {
   services.push({
     type: "postgres",
     data: {
-      projectName: input.projectName,
       serviceName: input.databaseServiceName,
       password: databasePassword,
     },
@@ -23,15 +22,19 @@ export function generate(input: Input): Output {
   services.push({
     type: "app",
     data: {
-      projectName: input.projectName,
       serviceName: input.appServiceName,
       source: {
         type: "image",
         image: input.appServiceImage,
       },
-      proxy: { port: 3000, secure: true },
+      domains: [
+        {
+          host: "$(EASYPANEL_DOMAIN)",
+          port: 3000,
+        },
+      ],
       env: [
-        `DATABASE_URL=postgres://postgres:${databasePassword}@${input.projectName}_${input.databaseServiceName}:5432/${input.projectName}?sslmode=disable`,
+        `DATABASE_URL=postgres://postgres:${databasePassword}@$(PROJECT_NAME)_${input.databaseServiceName}:5432/$(PROJECT_NAME)?sslmode=disable`,
         `DATABASE_TYPE=postgresql`,
         `HASH_SALT=${hashSalt}`,
       ].join("\n"),

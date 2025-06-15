@@ -6,15 +6,15 @@ export function generate(input: Input): Output {
   const dbHost =
     input.databaseType === "external"
       ? input.databaseServiceName
-      : `${input.projectName}_${input.databaseServiceName}`;
+      : `$(PROJECT_NAME)_${input.databaseServiceName}`;
   // const dbPort = input.databasePort || input.databaseType === 'postgres' ? 5432 : 3306
   const dbPort = input.databasePort || 3306;
-  const dbName = input.databaseName || input.projectName;
+  const dbName = input.databaseName || "$(PROJECT_NAME)";
   const dbUser = input.databaseUser || input.databaseType;
   const dbRandomPassword = input.databaseUserPassword || randomPassword();
 
   const serviceVariables = [
-    `FLARUM_BASE_URL=https://${input.appDomain}`,
+    `FLARUM_BASE_URL=https://$(PRIMARY_DOMAIN)`,
     `FLARUM_FORUM_TITLE=Flarum`,
     `DB_HOST=${dbHost}`,
     `DB_PORT=${dbPort}`,
@@ -26,27 +26,23 @@ export function generate(input: Input): Output {
   services.push({
     type: "app",
     data: {
-      projectName: input.projectName,
       serviceName: input.appServiceName,
       env: serviceVariables.join("\n"),
       source: {
         type: "image",
         image: input.appServiceImage,
       },
-      proxy: {
-        port: 8000,
-        secure: true,
-      },
+      domains: [
+        {
+          host: "$(EASYPANEL_DOMAIN)",
+          port: 8000,
+        },
+      ],
       mounts: [
         {
           type: "volume",
           name: "data",
           mountPath: "/data",
-        },
-      ],
-      domains: [
-        {
-          name: input.appDomain,
         },
       ],
     },
@@ -56,7 +52,6 @@ export function generate(input: Input): Output {
     services.push({
       type: input.databaseType,
       data: {
-        projectName: input.projectName,
         serviceName: input.databaseServiceName,
         password: dbRandomPassword,
       },

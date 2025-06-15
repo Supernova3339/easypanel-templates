@@ -8,19 +8,20 @@ export function generate(input: Input): Output {
   services.push({
     type: "app",
     data: {
-      projectName: input.projectName,
       serviceName: input.appServiceName,
       env: [
-        `CACHE__REDIS_URI=redis://default:${redisPassword}@${input.projectName}_${input.redisServiceName}:6379`,
+        `CACHE__REDIS_URI=redis://default:${redisPassword}@$(PROJECT_NAME)_${input.redisServiceName}:6379`,
       ].join("\n"),
       source: {
         type: "image",
         image: input.appServiceImage,
       },
-      proxy: {
-        port: 80,
-        secure: true,
-      },
+      domains: [
+        {
+          host: "$(EASYPANEL_DOMAIN)",
+          port: 80,
+        },
+      ],
       mounts: [
         {
           type: "volume",
@@ -33,11 +34,7 @@ export function generate(input: Input): Output {
 
   services.push({
     type: "redis",
-    data: {
-      projectName: input.projectName,
-      serviceName: input.redisServiceName,
-      password: redisPassword,
-    },
+    data: { serviceName: input.redisServiceName, password: redisPassword },
   });
 
   return { services };

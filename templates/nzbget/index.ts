@@ -7,7 +7,6 @@ export function generate(input: Input): Output {
   services.push({
     type: "app",
     data: {
-      projectName: input.projectName,
       serviceName: input.appServiceName,
       source: {
         type: "image",
@@ -18,10 +17,12 @@ export function generate(input: Input): Output {
         `NZBGET_PASS=${input.password}`,
         `TZ=${input.serviceTimezone}`,
       ].join("\n"),
-      proxy: {
-        port: 6789,
-        secure: true,
-      },
+      domains: [
+        {
+          host: "$(EASYPANEL_DOMAIN)",
+          port: 6789,
+        },
+      ],
       mounts: [
         {
           type: "volume",

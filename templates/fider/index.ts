@@ -1,4 +1,9 @@
-import { Output, randomPassword, randomString, Services } from "~templates-utils";
+import {
+  Output,
+  randomPassword,
+  randomString,
+  Services,
+} from "~templates-utils";
 import { Input } from "./meta";
 
 export function generate(input: Input): Output {
@@ -9,11 +14,10 @@ export function generate(input: Input): Output {
   services.push({
     type: "app",
     data: {
-      projectName: input.projectName,
       serviceName: input.appServiceName,
       env: [
-        `BASE_URL=https://${input.domain}`,
-        `DATABASE_URL=postgres://postgres:${databasePassword}@${input.projectName}_${input.databaseServiceName}:5432/${input.projectName}?sslmode=disable`,
+        `BASE_URL=https://$(PRIMARY_DOMAIN)`,
+        `DATABASE_URL=postgres://postgres:${databasePassword}@$(PROJECT_NAME)_${input.databaseServiceName}:5432/$(PROJECT_NAME)?sslmode=disable`,
         `JWT_SECRET=${secret}`,
         `EMAIL_NOREPLY=${input.emailNoReply}`,
         `EMAIL_SMTP_HOST=${input.emailHost}`,
@@ -21,33 +25,27 @@ export function generate(input: Input): Output {
         `EMAIL_SMTP_USERNAME=${input.emailUsername}`,
         `EMAIL_SMTP_PASSWORD=${input.emailPassword}`,
         `EMAIL_SMTP_ENABLE_STARTTLS=true`,
-
-
       ].join("\n"),
       source: {
         type: "image",
         image: input.appServiceImage,
       },
-      proxy: {
-        port: 80,
-        secure: true,
-      },
-          domains: [
+      domains: [
         {
-          name: input.domain,
+          host: "$(EASYPANEL_DOMAIN)",
+          port: 80,
         },
       ],
     },
   });
 
-    services.push({
-      type: "postgres",
-      data: {
-        projectName: input.projectName,
-        serviceName: input.databaseServiceName,
-        password: databasePassword,
-      },
-    });
+  services.push({
+    type: "postgres",
+    data: {
+      serviceName: input.databaseServiceName,
+      password: databasePassword,
+    },
+  });
 
   return { services };
 }

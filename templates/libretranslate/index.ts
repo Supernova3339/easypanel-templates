@@ -7,7 +7,6 @@ export function generate(input: Input): Output {
   services.push({
     type: "app",
     data: {
-      projectName: input.projectName,
       serviceName: input.appServiceName,
       env: [
         "LT_HOST=0.0.0.0",
@@ -22,11 +21,12 @@ export function generate(input: Input): Output {
         type: "image",
         image: input.appServiceImage,
       },
-      proxy: {
-        port: 5000,
-        secure: true,
-      },
-      domains: [{ name: input.appDomain }],
+      domains: [
+        {
+          host: "$(EASYPANEL_DOMAIN)",
+          port: 5000,
+        },
+      ],
     },
   });
 

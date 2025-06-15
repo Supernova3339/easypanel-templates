@@ -9,23 +9,24 @@ export function generate(input: Input): Output {
   services.push({
     type: "app",
     data: {
-      projectName: input.projectName,
       serviceName: input.appServiceName,
       env: [
         `DB_CONN=${input.databaseType}`,
-        `DB_HOST=${input.projectName}_${input.databaseServiceName}`,
+        `DB_HOST=$(PROJECT_NAME)_${input.databaseServiceName}`,
         `DB_USER=${databaseUsername}`,
         `DB_PASS=${databasePassword}`,
-        `DB_DATABASE=${input.projectName}`,
+        `DB_DATABASE=$(PROJECT_NAME)`,
       ].join("\n"),
       source: {
         type: "image",
         image: input.appServiceImage,
       },
-      proxy: {
-        port: 8080,
-        secure: true,
-      },
+      domains: [
+        {
+          host: "$(EASYPANEL_DOMAIN)",
+          port: 8080,
+        },
+      ],
       mounts: [
         {
           type: "volume",
@@ -40,7 +41,6 @@ export function generate(input: Input): Output {
     services.push({
       type: "postgres",
       data: {
-        projectName: input.projectName,
         serviceName: input.databaseServiceName,
         password: databasePassword,
       },
@@ -51,7 +51,6 @@ export function generate(input: Input): Output {
     services.push({
       type: "mysql",
       data: {
-        projectName: input.projectName,
         serviceName: input.databaseServiceName,
         image: "mysql:5",
         password: databasePassword,

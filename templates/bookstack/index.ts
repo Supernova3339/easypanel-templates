@@ -1,30 +1,38 @@
-import { Output, randomPassword, Services } from "~templates-utils";
+import {
+  Output,
+  randomPassword,
+  randomString,
+  Services,
+} from "~templates-utils";
 import { Input } from "./meta";
 
 export function generate(input: Input): Output {
   const services: Services = [];
   const databasePassword = randomPassword();
+  const appKey = randomString(32);
 
   services.push({
     type: "app",
     data: {
-      projectName: input.projectName,
       serviceName: input.appServiceName,
       env: [
-        `APP_URL=https://${input.domain}`,
-        `DB_HOST=${input.projectName}_${input.databaseServiceName}`,
-        `DB_USER=mariadb`,
-        `DB_PASS=${databasePassword}`,
-        `DB_DATABASE=${input.projectName}`,
+        `APP_URL=https://$(PRIMARY_DOMAIN)`,
+        `DB_HOST=$(PROJECT_NAME)_${input.databaseServiceName}`,
+        `DB_USERNAME=mariadb`,
+        `DB_PASSWORD=${databasePassword}`,
+        `DB_DATABASE=$(PROJECT_NAME)`,
+        `APP_KEY=${appKey}`,
       ].join("\n"),
       source: {
         type: "image",
         image: input.appServiceImage,
       },
-      proxy: {
-        port: 80,
-        secure: true,
-      },
+      domains: [
+        {
+          host: "$(EASYPANEL_DOMAIN)",
+          port: 80,
+        },
+      ],
       mounts: [
         {
           type: "volume",
@@ -38,7 +46,6 @@ export function generate(input: Input): Output {
   services.push({
     type: "mariadb",
     data: {
-      projectName: input.projectName,
       serviceName: input.databaseServiceName,
       password: databasePassword,
     },

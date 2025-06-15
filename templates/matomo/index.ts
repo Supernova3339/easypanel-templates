@@ -8,24 +8,25 @@ export function generate(input: Input): Output {
   services.push({
     type: "app",
     data: {
-      projectName: input.projectName,
       serviceName: input.appServiceName,
       env: [
         `MATOMO_DATABASE_ADAPTER=mysql`,
-        `MATOMO_DATABASE_HOST=${input.projectName}_${input.databaseServiceName}`,
+        `MATOMO_DATABASE_HOST=$(PROJECT_NAME)_${input.databaseServiceName}`,
         `MATOMO_DATABASE_TABLES_PREFIX=matomo_`,
         `MATOMO_DATABASE_USERNAME=mariadb`,
         `MATOMO_DATABASE_PASSWORD=${databasePassword}`,
-        `MATOMO_DATABASE_DBNAME=${input.projectName}`,
+        `MATOMO_DATABASE_DBNAME=$(PROJECT_NAME)`,
       ].join("\n"),
       source: {
         type: "image",
         image: input.appServiceImage,
       },
-      proxy: {
-        port: 80,
-        secure: true,
-      },
+      domains: [
+        {
+          host: "$(EASYPANEL_DOMAIN)",
+          port: 80,
+        },
+      ],
       mounts: [
         {
           type: "volume",
@@ -39,7 +40,6 @@ export function generate(input: Input): Output {
   services.push({
     type: "mariadb",
     data: {
-      projectName: input.projectName,
       serviceName: input.databaseServiceName,
       password: databasePassword,
     },

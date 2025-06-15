@@ -8,11 +8,10 @@ export function generate(input: Input): Output {
   services.push({
     type: "app",
     data: {
-      projectName: input.projectName,
       serviceName: input.appServiceName,
       env: [
-        `WAIT_HOSTS=${input.projectName}_${input.databaseServiceName}:27017`,
-        `ACKEE_MONGODB=mongodb://mongo:${mongoPassword}@${input.projectName}_${input.databaseServiceName}:27017`,
+        `WAIT_HOSTS=$(PROJECT_NAME)_${input.databaseServiceName}:27017`,
+        `ACKEE_MONGODB=mongodb://mongo:${mongoPassword}@$(PROJECT_NAME)_${input.databaseServiceName}:27017`,
         `ACKEE_USERNAME=${input.ackeeUsername}`,
         `ACKEE_PASSWORD=${input.ackeePassword}`,
       ].join("\n"),
@@ -20,17 +19,18 @@ export function generate(input: Input): Output {
         type: "image",
         image: input.appServiceImage,
       },
-      proxy: {
-        port: 3000,
-        secure: true,
-      },
+      domains: [
+        {
+          host: "$(EASYPANEL_DOMAIN)",
+          port: 3000,
+        },
+      ],
     },
   });
 
   services.push({
     type: "mongo",
     data: {
-      projectName: input.projectName,
       serviceName: input.databaseServiceName,
       image: "mongo:4",
       password: mongoPassword,

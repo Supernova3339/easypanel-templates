@@ -1,0 +1,225 @@
+name: Minecraft Server
+description:
+  The itzg/minecraft-server app is designed to provide a seamless Minecraft
+  Server experience. It automatically downloads the latest stable version of the
+  Minecraft server at startup, ensuring you're always up-to-date with the game's
+  latest features and improvements. The app also allows you to run or upgrade to
+  any specific version or the latest snapshot, giving you full control over your
+  gaming experience. If you're using Minecraft clients on consoles, mobile, or
+  native Windows, the app offers a dedicated Bedrock Server for optimal
+  performance. The standard server port, 25565, will be exposed on your host
+  machine for easy access and gameplay.
+instructions: null
+changeLog:
+  - date: 2023-03-18
+    description: First Release
+  - date: 2024-10-19
+    description: Update to 2024.10.2
+  - date: 2025-02-28
+    description: Version bumped to 2025.2.1
+links:
+  - label: Github
+    url: https://github.com/itzg/docker-minecraft-server
+  - label: Docker
+    url: https://hub.docker.com/r/itzg/minecraft-server
+contributors:
+  - name: Berk Sümbül
+    url: https://berksmbl.com
+  - name: Ahson Shaikh
+    url: https://github.com/Ahson-Shaikh
+schema:
+  type: object
+  required:
+    - appServiceName
+    - appServiceImage
+  properties:
+    appServiceName:
+      type: string
+      title: App Service Name
+      default: minecraft-server
+    appServiceImage:
+      type: string
+      title: App Service Image
+      default: itzg/minecraft-server:2025.2.1
+    serverName:
+      type: string
+      title: Server Name
+      default: MyServer
+    version:
+      type: string
+      title: Version
+      default: LATEST
+    type:
+      type: string
+      title: Server Types
+      default: VANILLA
+    motd:
+      type: string
+      title: Message of the Day
+      default: Minecraft Server powered by §aEasypanel§r
+    iconUrl:
+      type: string
+      title: Icon URL
+      default: https://cdn.berksmbl.com/easypanel-icon.png
+    gameMode:
+      type: string
+      title: Game Mode
+      default: survival
+      oneOf:
+        - enum:
+            - creative
+          title: Creative
+        - enum:
+            - survival
+          title: Survival
+        - enum:
+            - adventure
+          title: Adventure
+        - enum:
+            - spectator
+          title: Spectator
+    difficulty:
+      type: string
+      title: Difficulty
+      default: easy
+      oneOf:
+        - enum:
+            - peaceful
+          title: Peaceful
+        - enum:
+            - easy
+          title: Easy
+        - enum:
+            - normal
+          title: Normal
+        - enum:
+            - hard
+          title: Hard
+    maxPlayers:
+      type: number
+      title: Max Players
+      default: 20
+    maxWorldSize:
+      type: number
+      title: Max World Size
+      default: 10000
+    viewDistance:
+      type: number
+      title: View Distance
+      default: 10
+    maxBuildHeight:
+      type: number
+      title: Max Build Height
+      default: 256
+    maxTickTime:
+      type: number
+      title: Max Tick Time
+      default: 60000
+    eula:
+      type: boolean
+      title: Please accept the Minecraft EULA
+      default: true
+    allowNether:
+      type: boolean
+      title: Allow Nether
+      default: true
+    announcePlayerAchievements:
+      type: boolean
+      title: Announce Player Achievements
+      default: true
+    generateStructures:
+      type: boolean
+      title: Generate Structures
+      default: true
+    pvp:
+      type: boolean
+      title: PVP Mode
+      default: true
+    forceGamemode:
+      type: boolean
+      title: Force Gamemode
+      default: false
+    hardcore:
+      type: boolean
+      title: Hardcore
+      default: false
+    enableCommandBlock:
+      type: boolean
+      title: Enable Command Block
+      default: true
+    spawnAnimals:
+      type: boolean
+      title: Spawn Animals
+      default: true
+    spawnMonsters:
+      type: boolean
+      title: Spawn Monsters
+      default: true
+    spawnNpcs:
+      type: boolean
+      title: Spawn NPCs
+      default: true
+    snooperEnabled:
+      type: boolean
+      title: Snooper Enabled
+      default: false
+    onlineMode:
+      type: boolean
+      title: Online Mode
+      default: false
+    enableRcon:
+      type: boolean
+      title: Enable RCON
+      default: false
+    enableQuery:
+      type: boolean
+      title: Enable Query
+      default: false
+    serverPort:
+      type: number
+      title: Server Port
+      default: 25565
+    queryPort:
+      type: number
+      title: Query Port
+      default: 25565
+    rconPort:
+      type: number
+      title: RCON Port
+      default: 25575
+    rconPassword:
+      type: string
+      title: RCON Password
+benefits:
+  - title: Latest Minecraft Versions
+    description:
+      The app automatically downloads the latest stable version of Minecraft
+      Server at startup, ensuring you always have the most recent features and
+      updates.
+  - title: Flexible Version Support
+    description:
+      You can run or upgrade to any specific version of Minecraft Server or the
+      latest snapshot, giving you the flexibility to choose the version that
+      best suits your needs.
+  - title: Dedicated Server for Different Platforms
+    description:
+      The app provides a dedicated server for Minecraft clients running on
+      consoles, mobile, or native Windows, ensuring a smooth and seamless gaming
+      experience across different platforms.
+features:
+  - title: Dynamic Version Support
+    description:
+      The app supports dynamic versioning, automatically downloading the latest
+      stable version of Minecraft Server at startup.
+  - title: Server Types and Modpack Support
+    description:
+      The app supports various server types and modpacks, enhancing your
+      Minecraft gaming experience with additional features and functionalities.
+  - title: Dedicated Server for Different Platforms
+    description:
+      The app provides a dedicated server for Minecraft clients running on
+      consoles, mobile, or native Windows, ensuring compatibility and a smooth
+      gaming experience.
+tags:
+  - Gaming
+  - Developer Tools

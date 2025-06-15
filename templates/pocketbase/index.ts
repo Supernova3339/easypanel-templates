@@ -7,21 +7,32 @@ export function generate(input: Input): Output {
   services.push({
     type: "app",
     data: {
-      projectName: input.projectName,
       serviceName: input.appServiceName,
       source: {
         type: "image",
         image: input.appServiceImage,
       },
-      proxy: {
-        port: 8090,
-        secure: true,
-      },
+      domains: [
+        {
+          host: "$(EASYPANEL_DOMAIN)",
+          port: 80,
+        },
+      ],
       mounts: [
         {
           type: "volume",
-          name: "pocketbase-data",
+          name: "data",
           mountPath: "/pb_data",
+        },
+        {
+          type: "volume",
+          name: "public",
+          mountPath: "/pb_public",
+        },
+        {
+          type: "volume",
+          name: "migrations",
+          mountPath: "/pb_migrations",
         },
       ],
     },

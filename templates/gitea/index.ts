@@ -11,15 +11,14 @@ export function generate(input: Input): Output {
   services.push({
     type: "app",
     data: {
-      projectName: input.projectName,
       serviceName: input.appServiceName,
       env: [
         `USER_UID=1000`,
         `USER_GID=1000`,
-        `ROOT_URL=https://${input.domain}`,
+        `ROOT_URL=https://$(PRIMARY_DOMAIN)`,
         `GITEA__database__DB_TYPE=${input.databaseType}`,
-        `GITEA__database__HOST=${input.projectName}_${input.databaseServiceName}:${databasePort}`,
-        `GITEA__database__NAME=${input.projectName}`,
+        `GITEA__database__HOST=$(PROJECT_NAME)_${input.databaseServiceName}:${databasePort}`,
+        `GITEA__database__NAME=$(PROJECT_NAME)`,
         `GITEA__database__USER=${databaseUsername}`,
         `GITEA__database__PASSWD=${databasePassword}`,
       ].join("\n"),
@@ -27,10 +26,12 @@ export function generate(input: Input): Output {
         type: "image",
         image: input.appServiceImage,
       },
-      proxy: {
-        port: 3000,
-        secure: true,
-      },
+      domains: [
+        {
+          host: "$(EASYPANEL_DOMAIN)",
+          port: 3000,
+        },
+      ],
       mounts: [
         {
           type: "volume",
@@ -61,7 +62,6 @@ export function generate(input: Input): Output {
     services.push({
       type: "postgres",
       data: {
-        projectName: input.projectName,
         serviceName: input.databaseServiceName,
         password: databasePassword,
       },
@@ -72,7 +72,6 @@ export function generate(input: Input): Output {
     services.push({
       type: "mysql",
       data: {
-        projectName: input.projectName,
         serviceName: input.databaseServiceName,
         password: databasePassword,
       },

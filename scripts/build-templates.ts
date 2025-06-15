@@ -1,8 +1,6 @@
 import { readFile, writeFile } from "fs/promises";
 import glob from "glob";
 import { compile } from "json-schema-to-typescript";
-import { snakeCase } from "lodash";
-import * as path from "path";
 import prettier from "prettier";
 import YAML from "yaml";
 
@@ -28,7 +26,7 @@ async function run() {
       `./templates/${item}/meta.ts`,
       prettier.format(
         [
-          `// Generated using "yarn build-templates"`,
+          `// Generated using "npm run build-templates"`,
           ``,
           `export const meta = ${JSON.stringify({
             ...meta,
@@ -49,7 +47,7 @@ async function run() {
 run().catch(console.error);
 
 async function generateIndex(items: string[]) {
-  const output: string[] = [`// Generated using "yarn build-templates"`, ""];
+  const output: string[] = [`// Generated using "npm run build-templates"`, ""];
 
   items.forEach((item) => {
     output.push(
@@ -76,11 +74,15 @@ async function generateIndex(items: string[]) {
 }
 
 function getLogo(dir: string) {
-  const files = glob.sync(path.resolve(dir, "logo.{png,svg}"));
+  const files = glob.sync(dir + "/logo.{png,svg}");
   return files[0]?.split("/").pop() ?? null;
 }
 
 function getScreenshots(dir: string) {
-  const files = glob.sync(path.resolve(dir, "screenshot*.{png,jpg}"));
+  const files = glob.sync(dir + "/screenshot*.{png,jpg,gif}");
   return files.map((file) => file.split("/").pop());
+}
+
+function snakeCase(str: string) {
+  return str.toLowerCase().replace(/([^a-z0-9]+)/g, "_");
 }

@@ -10,24 +10,25 @@ export function generate(input: Input): Output {
   services.push({
     type: "app",
     data: {
-      projectName: input.projectName,
       serviceName: input.appServiceName,
       env: [
         `DB_TYPE=${input.databaseType}`,
-        `DB_HOST=${input.projectName}_${input.databaseServiceName}`,
+        `DB_HOST=$(PROJECT_NAME)_${input.databaseServiceName}`,
         `DB_PORT=${databasePort}`,
         `DB_USER=${databaseUsername}`,
         `DB_PASS=${databasePassword}`,
-        `DB_NAME=${input.projectName}`,
+        `DB_NAME=$(PROJECT_NAME)`,
       ].join("\n"),
       source: {
         type: "image",
         image: input.appServiceImage,
       },
-      proxy: {
-        port: 3000,
-        secure: true,
-      },
+      domains: [
+        {
+          host: "$(EASYPANEL_DOMAIN)",
+          port: 3000,
+        },
+      ],
     },
   });
 
@@ -35,7 +36,6 @@ export function generate(input: Input): Output {
     services.push({
       type: "postgres",
       data: {
-        projectName: input.projectName,
         serviceName: input.databaseServiceName,
         password: databasePassword,
       },
@@ -46,7 +46,6 @@ export function generate(input: Input): Output {
     services.push({
       type: "mysql",
       data: {
-        projectName: input.projectName,
         serviceName: input.databaseServiceName,
         password: databasePassword,
       },
@@ -57,7 +56,6 @@ export function generate(input: Input): Output {
     services.push({
       type: "mariadb",
       data: {
-        projectName: input.projectName,
         serviceName: input.databaseServiceName,
         password: databasePassword,
       },
