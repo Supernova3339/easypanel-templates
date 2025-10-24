@@ -48,6 +48,27 @@ class ComposeToTemplateConverter {
     return name.replace(/-/g, '_');
   }
 
+  private isConfigFile(path: string): boolean {
+    // Check if the path looks like a config file
+    const configExtensions = ['.conf', '.config', '.cfg', '.ini', '.yml', '.yaml', '.json', '.xml', '.toml', '.env', '.properties'];
+    const configDirs = ['config', 'conf', 'etc'];
+
+    // Check extension
+    const hasConfigExt = configExtensions.some(ext => path.toLowerCase().endsWith(ext));
+    if (hasConfigExt) return true;
+
+    // Check if it's in a config directory
+    const hasConfigDir = configDirs.some(dir => path.toLowerCase().includes(`/${dir}/`));
+    if (hasConfigDir) return true;
+
+    // Check common config file names
+    const fileName = path.split('/').pop()?.toLowerCase() || '';
+    const configFileNames = ['dockerfile', 'makefile', 'nginx.conf', 'apache.conf', 'httpd.conf'];
+    if (configFileNames.includes(fileName)) return true;
+
+    return false;
+  }
+
   async convert(composePath: string, templateSlug: string) {
     console.log('╔════════════════════════════════════════════════════════════╗');
     console.log('║   Docker Compose to Easypanel Template Converter          ║');
@@ -196,7 +217,8 @@ class ComposeToTemplateConverter {
     const allServices = [...analysis.databases, ...analysis.apps, ...analysis.otherServices];
     for (const serviceName of allServices) {
       const service = compose.services[serviceName];
-      const fieldName = `${serviceName}ServiceName`;
+      const sanitizedName = this.sanitizeVarName(serviceName);
+      const fieldName = `${sanitizedName}ServiceName`;
 
       schema.properties[fieldName] = {
         type: 'string',
@@ -207,7 +229,7 @@ class ComposeToTemplateConverter {
 
       // Add image field
       if (service.image) {
-        const imageField = `${serviceName}ServiceImage`;
+        const imageField = `${sanitizedName}ServiceImage`;
         schema.properties[imageField] = {
           type: 'string',
           title: `${serviceName} Docker Image`,
@@ -220,7 +242,7 @@ class ComposeToTemplateConverter {
       if (service.environment) {
         const envVars = this.parseEnvironment(service.environment);
         for (const [key, value] of Object.entries(envVars)) {
-          const envFieldName = `${serviceName}_${key}`;
+          const envFieldName = `${sanitizedName}_${key}`;
           schema.properties[envFieldName] = {
             type: 'string',
             title: `${serviceName}: ${key}`,
@@ -278,6 +300,7 @@ class ComposeToTemplateConverter {
     for (const dbName of analysis.databases) {
       const service = compose.services[dbName];
       const dbType = this.detectDatabaseType(service.image || '');
+      const sanitizedDbName = this.sanitizeVarName(dbName);
 
       code += `  // ${dbName} Service (${dbType || 'database'})\n`;
 
@@ -285,7 +308,7 @@ class ComposeToTemplateConverter {
         code += `  services.push({\n`;
         code += `    type: "${dbType}",\n`;
         code += `    data: {\n`;
-        code += `      serviceName: input.${dbName}ServiceName,\n`;
+        code += `      serviceName: input.${sanitizedDbName}ServiceName,\n`;
         code += `      password: ${dbPasswords[dbName]},\n`;
         code += `    },\n`;
         code += `  });\n\n`;
@@ -318,11 +341,13 @@ class ComposeToTemplateConverter {
     service: DockerComposeService,
     dbPasswords: Record<string, string>
   ): string {
+    const sanitizedName = this.sanitizeVarName(serviceName);
+
     let code = `  // ${serviceName} Service\n`;
     code += `  services.push({\n`;
     code += `    type: "app",\n`;
     code += `    data: {\n`;
-    code += `      serviceName: input.${serviceName}ServiceName,\n`;
+    code += `      serviceName: input.${sanitizedName}ServiceName,\n`;
 
     // Environment variables
     const envVars = this.parseEnvironment(service.environment || {});
@@ -339,7 +364,7 @@ class ComposeToTemplateConverter {
     if (service.image) {
       code += `      source: {\n`;
       code += `        type: "image",\n`;
-      code += `        image: input.${serviceName}ServiceImage,\n`;
+      code += `        image: input.${sanitizedName}ServiceImage,\n`;
       code += `      },\n`;
     } else if (service.build) {
       code += `      // TODO: Configure build source\n`;
@@ -350,21 +375,37 @@ class ComposeToTemplateConverter {
     }
 
     // Volumes
+    const mounts: string[] = [];
     if (service.volumes && service.volumes.length > 0) {
-      code += `      mounts: [\n`;
       for (const volume of service.volumes) {
         const parsed = this.parseVolume(volume);
         if (parsed.type === 'volume') {
-          code += `        {\n`;
-          code += `          type: "volume",\n`;
-          code += `          name: "${parsed.name}",\n`;
-          code += `          mountPath: "${parsed.containerPath}",\n`;
-          code += `        },\n`;
+          mounts.push(`        {
+          type: "volume",
+          name: "${parsed.name}",
+          mountPath: "${parsed.containerPath}",
+        }`);
         } else if (parsed.type === 'bind') {
-          code += `        // TODO: Handle bind mount: ${volume}\n`;
+          // Handle bind mounts - check if it's a config file
+          if (this.isConfigFile(parsed.hostPath || '')) {
+            // For config files, create a file mount with placeholder content
+            mounts.push(`        {
+          type: "file",
+          content: "# TODO: Add content for ${parsed.hostPath}",
+          mountPath: "${parsed.containerPath}",
+        }`);
+          } else {
+            // For other bind mounts, add a comment
+            mounts.push(`        // TODO: Bind mount not supported: ${volume}`);
+          }
         }
       }
-      code += `      ],\n`;
+
+      if (mounts.length > 0) {
+        code += `      mounts: [\n`;
+        code += mounts.join(',\n');
+        code += `\n      ],\n`;
+      }
     }
 
     // Ports / Domains
