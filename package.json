@@ -20,7 +20,9 @@
     "generate-tags": "ts-node -r tsconfig-paths/register ./scripts/ai-tags.ts",
     "build-all": "run-s build-and-move-templates build-and-move-docs",
     "create-template": "ts-node -r tsconfig-paths/register ./scripts/create-template.ts",
-    "quick-template": "ts-node -r tsconfig-paths/register ./scripts/quick-template.ts"
+    "quick-template": "ts-node -r tsconfig-paths/register ./scripts/quick-template.ts",
+    "advanced-template": "ts-node -r tsconfig-paths/register ./scripts/advanced-template.ts",
+    "compose-to-template": "ts-node -r tsconfig-paths/register ./scripts/compose-to-template.ts"
   },
   "dependencies": {
     "@ai-sdk/google": "^1.2.18",
