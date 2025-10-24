@@ -58,12 +58,16 @@ const Home: NextPage = () => {
             Templates
           </Text>
           <Select
+            key={slug as string || "no-selection"}
             placeholder="Select Template"
             options={templateOptions}
             value={selectedOption}
             onChange={(option) => {
               if (option) {
-                router.push(option.value);
+                router.push(`/?slug=${option.value}`, undefined, { shallow: false });
+              } else {
+                // Clear selection
+                router.push("/", undefined, { shallow: false });
               }
             }}
             chakraStyles={{
@@ -73,6 +77,10 @@ const Home: NextPage = () => {
               }),
             }}
             isClearable
+            menuPortalTarget={typeof document !== 'undefined' ? document.body : null}
+            styles={{
+              menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+            }}
           />
         </Flex>
       </Box>
