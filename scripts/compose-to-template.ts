@@ -14,6 +14,7 @@
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as yaml from 'yaml';
+import axios from 'axios';
 
 interface DockerComposeService {
   image?: string;
@@ -38,6 +39,15 @@ interface DockerCompose {
 }
 
 class ComposeToTemplateConverter {
+  private isUrl(path: string): boolean {
+    return path.startsWith('http://') || path.startsWith('https://');
+  }
+
+  private sanitizeVarName(name: string): string {
+    // Convert hyphens to underscores for valid JavaScript variable names
+    return name.replace(/-/g, '_');
+  }
+
   async convert(composePath: string, templateSlug: string) {
     console.log('╔════════════════════════════════════════════════════════════╗');
     console.log('║   Docker Compose to Easypanel Template Converter          ║');
@@ -53,9 +63,33 @@ class ComposeToTemplateConverter {
       throw new Error(`Template "${templateSlug}" already exists!`);
     }
 
-    // Read docker-compose file
-    console.log(`Reading: ${composePath}`);
-    const composeContent = await fs.readFile(composePath, 'utf-8');
+    // Read docker-compose file (from URL or local file)
+    let composeContent: string;
+
+    if (this.isUrl(composePath)) {
+      console.log(`Fetching from URL: ${composePath}`);
+      try {
+        const response = await axios.get(composePath, {
+          timeout: 30000,
+          headers: {
+            'User-Agent': 'Easypanel-Template-Converter/1.0',
+          },
+        });
+        composeContent = response.data;
+        if (typeof composeContent !== 'string') {
+          composeContent = yaml.stringify(composeContent);
+        }
+      } catch (error) {
+        if (axios.isAxiosError(error)) {
+          throw new Error(`Failed to fetch from URL: ${error.message}`);
+        }
+        throw error;
+      }
+    } else {
+      console.log(`Reading: ${composePath}`);
+      composeContent = await fs.readFile(composePath, 'utf-8');
+    }
+
     const compose: DockerCompose = yaml.parse(composeContent);
 
     if (!compose.services || Object.keys(compose.services).length === 0) {
@@ -190,7 +224,7 @@ class ComposeToTemplateConverter {
           schema.properties[envFieldName] = {
             type: 'string',
             title: `${serviceName}: ${key}`,
-            default: value,
+            default: String(value),
           };
         }
       }
@@ -231,7 +265,7 @@ class ComposeToTemplateConverter {
     // Generate passwords for databases
     const dbPasswords: Record<string, string> = {};
     for (const dbName of analysis.databases) {
-      const varName = `${dbName}Password`;
+      const varName = `${this.sanitizeVarName(dbName)}Password`;
       dbPasswords[dbName] = varName;
       code += `  const ${varName} = randomPassword();\n`;
     }
@@ -349,8 +383,10 @@ class ComposeToTemplateConverter {
     // Command
     if (service.command) {
       const command = Array.isArray(service.command) ? service.command.join(' ') : service.command;
+      // Escape quotes in command
+      const escapedCommand = command.replace(/"/g, '\\"');
       code += `      deploy: {\n`;
-      code += `        command: "${command}",\n`;
+      code += `        command: "${escapedCommand}",\n`;
       code += `      },\n`;
     }
 
@@ -372,17 +408,20 @@ class ComposeToTemplateConverter {
     return env;
   }
 
-  private interpolateEnvValue(value: string, dbPasswords: Record<string, string>): string {
+  private interpolateEnvValue(value: string | number | boolean, dbPasswords: Record<string, string>): string {
+    // Convert to string if not already
+    let strValue = String(value);
+
     // Replace database password references
     for (const [dbName, passwordVar] of Object.entries(dbPasswords)) {
       // Look for patterns like "postgres://user:password@db:5432"
-      value = value.replace(new RegExp(dbName, 'g'), `$(PROJECT_NAME)_\${input.${dbName}ServiceName}`);
+      strValue = strValue.replace(new RegExp(dbName, 'g'), `$(PROJECT_NAME)_\${input.${dbName}ServiceName}`);
     }
 
     // Escape template literals
-    value = value.replace(/`/g, '\\`').replace(/\$/g, '\\$');
+    strValue = strValue.replace(/`/g, '\\`').replace(/\$/g, '\\$');
 
-    return value;
+    return strValue;
   }
 
   private parseVolume(volume: string): {
@@ -492,15 +531,20 @@ async function main() {
 Docker Compose to Easypanel Template Converter
 
 Usage:
-  npm run compose-to-template -- <path-to-docker-compose.yml> <template-slug>
+  npm run compose-to-template -- <path-or-url> <template-slug>
 
 Arguments:
-  path              Path to docker-compose.yml file
+  path-or-url       Path to docker-compose.yml file OR URL to fetch from
   template-slug     Slug for the new template (lowercase, e.g., myapp)
 
-Example:
+Examples:
+  # Local file
   npm run compose-to-template -- ./docker-compose.yml myapp
   npm run compose-to-template -- ~/projects/myapp/docker-compose.yml myapp
+
+  # From URL
+  npm run compose-to-template -- https://raw.githubusercontent.com/user/repo/main/docker-compose.yml myapp
+  npm run compose-to-template -- https://example.com/docker-compose.yml myapp
 
 Options:
   --help, -h        Show this help message

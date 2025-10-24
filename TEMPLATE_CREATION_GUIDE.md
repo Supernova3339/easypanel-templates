@@ -675,6 +675,12 @@ npm run compose-to-template -- ./docker-compose.yml myapp
 # Convert from another directory
 npm run compose-to-template -- ~/projects/myapp/docker-compose.yml myapp
 
+# Fetch from GitHub raw URL
+npm run compose-to-template -- https://raw.githubusercontent.com/user/repo/main/docker-compose.yml myapp
+
+# Fetch from any URL
+npm run compose-to-template -- https://example.com/path/to/docker-compose.yml myapp
+
 # Show help
 npm run compose-to-template -- --help
 ```
